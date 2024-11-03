@@ -7,19 +7,13 @@ export default function home() {
     </header>
                 <div id="wd-images">
                 Select the item that you prefer:
-                <br />
-                <img id="wd-faker"
-                    height="400px"
-                    src="https://theproperlabel.us/cdn/shop/products/the-proper-tee-shirt-classic-no-logo-603222.jpg?v=1707423861"
-                />
-                <img id="wd-chovy"
-                    height="400px"
-                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRk7bneYFNq_nen0zwcgB6vqDWNbdbQe2zXNw&s"
-                />
-                <br />
                 Loading a local image:
                 <br />
-                <img id="wd-teslabot" src="images/teslabot.jpg" height="200px" />
+                <img id="wd-pants1" src="images/pants1.jpg" height="200px" />
+                <img id="wd-pants1" src="images/pants1.jpg" height="200px" />
+                <img id="wd-pants1" src="images/pants1.jpg" height="200px" />
+                <img id="wd-pants1" src="images/pants1.jpg" height="200px" />
+                <img id="wd-pants1" src="images/pants1.jpg" height="200px" />
             </div></div>
   );}
   
