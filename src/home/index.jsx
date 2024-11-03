@@ -15,7 +15,6 @@ export default function home() {
                 <img id="wd-pants3" src="clothing v.2/pants/pants 3.jpg" height="200px" />
                 <img id="wd-pants4" src="clothing v.2/pants/pants 4.jpg" height="200px" />
                 <img id="wd-pants5" src="clothing v.2/pants/pants 5.jpg" height="200px" />
-
             </div></div>
   );}
   
