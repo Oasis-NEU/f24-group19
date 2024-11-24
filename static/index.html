@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pants Predictor</title>
+    <title>Clothing Recommender</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,7 +25,7 @@
     </style>
 </head>
 <body>
-    <h1>Pants Predictor</h1>
+    <h1>Clothing Recommender</h1>
     <button id="trainButton">Train Model</button>
     <form id="predictForm">
         <h2>Predict Pants</h2>
@@ -59,10 +59,31 @@
             <option value="cargo">Cargo Pants</option>
             <option value="jeans">Jeans</option>
         </select><br />
+        <h2>Get Recommendation</h2>
+        <label>
+            Top/Bottom:
+            <input type="text" id="top_bot" name="top_bot" value="bottom" required>
+        </label>
+        <br>
+        <label>
+            Color:
+            <input type="text" id="color" name="color" value="black" required>
+        </label>
+        <br>
+        <label>
+            Length:
+            <input type="text" id="length" name="length" value="long" required>
+        </label>
+        <br>
+        <label>
+            Style:
+            <input type="text" id="style" name="style" value="jeans" required>
+        </label>
+        <br>
         <button type="submit">Predict</button>
     </form>
     <div id="predictions">
-        <h2>Predicted Pants:</h2>
+        <h2>Recommended:</h2>
     </div>
 
     <!-- Reference the app.js script from the static folder -->
