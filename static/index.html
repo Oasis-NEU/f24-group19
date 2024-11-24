@@ -3,10 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clothing Recommendation</title>
-    <script src="app.js" defer></script>
+    <title>Clothing Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin: 5px 0;
+        }
+
+        input {
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 200px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #result, #train-status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
 </head>
 <body>
-    <div id="app"></div>
+    <h1>Clothing Predictor</h1>
+
+    <!-- Button to Train the Model -->
+    <div>
+        <button onclick="trainModel()">Train Model</button>
+        <div id="train-status"></div>
+    </div>
+
+    <hr>
+
+    <!-- Form for Making Predictions -->
+    <form id="predictForm">
+        <label for="top_bot">Top or Bottom:</label>
+        <input type="text" id="top_bot" name="top_bot" placeholder="e.g., bottom">
+
+        <label for="color">Color:</label>
+        <input type="text" id="color" name="color" placeholder="e.g., black">
+
+        <label for="length">Length:</label>
+        <input type="text" id="length" name="length" placeholder="e.g., long">
+
+        <label for="style">Style:</label>
+        <input type="text" id="style" name="style" placeholder="e.g., jeans">
+
+        <button type="button" onclick="predictClothing()">Predict</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        // Function to train the model
+        function trainModel() {
+            fetch('/train', {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('train-status').innerText = data.message;
+                document.getElementById('train-status').classList.remove('error');
+            })
+            .catch(error => {
+                document.getElementById('train-status').innerText = 'Error: Could not train the model.';
+                document.getElementById('train-status').classList.add('error');
+            });
+        }
+
+        // Function to make a prediction
+        function predictClothing() {
+            const data = {
+                top_bot: document.getElementById('top_bot').value,
+                color: document.getElementById('color').value,
+                length: document.getElementById('length').value,
+                style: document.getElementById('style').value
+            };
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.error) {
+                    document.getElementById('result').innerText = result.error;
+                    document.getElementById('result').classList.add('error');
+                } else {
+                    document.getElementById('result').innerText = `Predicted Category: ${result.predicted_category}`;
+                    document.getElementById('result').classList.remove('error');
+                }
+            })
+            .catch(error => {
+                document.getElementById('result').innerText = 'Error: Could not get a prediction.';
+                document.getElementById('result').classList.add('error');
+            });
+        }
+    </script>
 </body>
 </html>
