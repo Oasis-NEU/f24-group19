@@ -3,130 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clothing Predictor</title>
+    <title>Pants Predictor</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            text-align: center;
+            padding: 20px;
         }
-
-        h1 {
-            color: #333;
-        }
-
-        form {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin: 5px 0;
-        }
-
-        input {
-            margin-bottom: 10px;
-            padding: 5px;
-            width: 200px;
-        }
-
-        button {
-            padding: 10px 15px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        #result, #train-status {
+        img {
+            max-width: 300px;
             margin-top: 20px;
-            font-weight: bold;
-        }
-
-        .error {
-            color: red;
         }
     </style>
 </head>
 <body>
-    <h1>Clothing Predictor</h1>
-
-    <!-- Button to Train the Model -->
-    <div>
-        <button onclick="trainModel()">Train Model</button>
-        <div id="train-status"></div>
+    <h1>Pants Predictor</h1>
+    <button id="trainButton">Train Model</button>
+    <form id="predictForm">
+        <h2>Predict Pants</h2>
+        <label>
+            Top/Bottom:
+            <input type="text" name="top_bot" value="bottom" required>
+        </label>
+        <br>
+        <label>
+            Color:
+            <input type="text" name="color" value="black" required>
+        </label>
+        <br>
+        <label>
+            Length:
+            <input type="text" name="length" value="long" required>
+        </label>
+        <br>
+        <label>
+            Style:
+            <input type="text" name="style" value="jeans" required>
+        </label>
+        <br>
+        <button type="submit">Predict</button>
+    </form>
+    <div id="result">
+        <h2>Prediction Result:</h2>
+        <div id="image-container"></div>
     </div>
 
-    <hr>
-
-    <!-- Form for Making Predictions -->
-    <form id="predictForm">
-        <label for="top_bot">Top or Bottom:</label>
-        <input type="text" id="top_bot" name="top_bot" placeholder="e.g., bottom">
-
-        <label for="color">Color:</label>
-        <input type="text" id="color" name="color" placeholder="e.g., black">
-
-        <label for="length">Length:</label>
-        <input type="text" id="length" name="length" placeholder="e.g., long">
-
-        <label for="style">Style:</label>
-        <input type="text" id="style" name="style" placeholder="e.g., jeans">
-
-        <button type="button" onclick="predictClothing()">Predict</button>
-    </form>
-
-    <div id="result"></div>
-
     <script>
-        // Function to train the model
-        function trainModel() {
-            fetch('/train', {
-                method: 'POST',
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('train-status').innerText = data.message;
-                document.getElementById('train-status').classList.remove('error');
-            })
-            .catch(error => {
-                document.getElementById('train-status').innerText = 'Error: Could not train the model.';
-                document.getElementById('train-status').classList.add('error');
-            });
-        }
+        document.getElementById('trainButton').addEventListener('click', async () => {
+            const response = await fetch('/train', { method: 'POST' });
+            const result = await response.json();
+            alert(result.message);
+        });
 
-        // Function to make a prediction
-        function predictClothing() {
-            const data = {
-                top_bot: document.getElementById('top_bot').value,
-                color: document.getElementById('color').value,
-                length: document.getElementById('length').value,
-                style: document.getElementById('style').value
-            };
+        document.getElementById('predictForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
 
-            fetch('/predict', {
+            // Collect form data
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+
+            // Predict category
+            const response = await fetch('/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.error) {
-                    document.getElementById('result').innerText = result.error;
-                    document.getElementById('result').classList.add('error');
-                } else {
-                    document.getElementById('result').innerText = `Predicted Category: ${result.predicted_category}`;
-                    document.getElementById('result').classList.remove('error');
-                }
-            })
-            .catch(error => {
-                document.getElementById('result').innerText = 'Error: Could not get a prediction.';
-                document.getElementById('result').classList.add('error');
             });
-        }
+
+            if (response.ok) {
+                const result = await response.json();
+
+                // Show the predicted image
+                const imageName = result.predicted_category;
+                const imageUrl = `/get_image/${imageName}`;
+
+                const imageContainer = document.getElementById('image-container');
+                imageContainer.innerHTML = `<img src="${imageUrl}" alt="${imageName}">`;
+            } else {
+                const error = await response.json();
+                alert(error.error || "An error occurred.");
+            }
+        });
     </script>
 </body>
 </html>
