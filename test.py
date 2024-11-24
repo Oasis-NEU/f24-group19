@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, send_from_directory
+from flask import Flask, request, jsonify, send_file
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
@@ -78,43 +78,26 @@ def predict_new_item(new_item, n_predictions = 3):
 
     return predictions
 
-@app.route('/')
-def home():
-    return send_from_directory('static', 'index.html')
+def example_new_item():
+    new_item_data = {
+        "top_bot": ["bottom"],
+        "color": ["black"],
+        "length": ["long"],
+        "style": ["sweats"]
+    }
+    new_item = pd.DataFrame(new_item_data)
+    return new_item
 
-@app.route('/train', methods=['POST'])
-def train():
-    # Create and encode dataset
+def main():
+
     df = pants_tagging()
     df = encoding(df)
     train_model(df)
-    return jsonify({"message": "Model trained successfully!"})
+    new_item = example_new_item()
+    predictions = predict_new_item(new_item)
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    if knn is None:
-        return jsonify({"error": "Model not trained yet. Call /train first."}), 400
-
-    # Get user input from the form data (excluding n_predictions)
-    data = request.json
-    n_predictions = data.get('n_predictions', 3)  # Default to 3 predictions
-    features = {key: value for key, value in data.items() if key != 'n_predictions'}
-
-    new_item = pd.DataFrame([features])  # Create DataFrame with only the relevant features
-
-    # Predict top n items
-    predicted_items = predict_new_item(new_item, n_predictions=n_predictions)
-    return jsonify({"predicted_categories": predicted_items})
-
-
-
-@app.route('/get_image/<image_name>')
-def get_image(image_name):
-    image_path = os.path.join('static', 'images', image_name)
-    if os.path.exists(image_path):
-        return send_file(image_path, mimetype='image/jpeg')
-    else:
-        return jsonify({"error": "Image not found!"}), 404
+    print(predictions)
+    main()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    main()

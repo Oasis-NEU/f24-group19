@@ -1,82 +1,57 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const app = document.getElementById("app");
+document.getElementById("trainButton").addEventListener("click", async () => {
+    const response = await fetch("/train", { method: "POST" });
+    const result = await response.json();
+    alert(result.message || "Model trained successfully!");
+});
 
-    // Create UI elements
-    const title = document.createElement("h1");
-    title.textContent = "Clothing Recommendation System";
-    app.appendChild(title);
+document.getElementById("predictForm").addEventListener("submit", async (event) => {
+    event.preventDefault();  // Prevent default form submission
 
-    const trainButton = document.createElement("button");
-    trainButton.textContent = "Train Model";
-    trainButton.addEventListener("click", async () => {
-        try {
-            const response = await fetch("/train", { method: "POST" });
-            const result = await response.json();
-            alert(result.message);
-        } catch (error) {
-            alert("Error training the model.");
-        }
-    });
-    app.appendChild(trainButton);
+    // Collect form data
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData);
 
-    app.appendChild(document.createElement("hr"));
+    // Remove 'n_predictions' from the data since it's not a feature for the model
+    const { n_predictions, ...predictData } = data;
 
-    const formTitle = document.createElement("h2");
-    formTitle.textContent = "Predict Clothing Category";
-    app.appendChild(formTitle);
-
-    const form = document.createElement("form");
-
-    const fields = [
-        { id: "top_bot", label: "Top or Bottom", type: "text", placeholder: "e.g., bottom" },
-        { id: "color", label: "Color", type: "text", placeholder: "e.g., green" },
-        { id: "length", label: "Length", type: "text", placeholder: "e.g., long" },
-        { id: "style", label: "Style", type: "text", placeholder: "e.g., slacks" },
-    ];
-
-    fields.forEach((field) => {
-        const label = document.createElement("label");
-        label.textContent = `${field.label}: `;
-        const input = document.createElement("input");
-        input.type = field.type;
-        input.id = field.id;
-        input.placeholder = field.placeholder;
-        form.appendChild(label);
-        form.appendChild(input);
-        form.appendChild(document.createElement("br"));
-    });
-
-    const submitButton = document.createElement("button");
-    submitButton.textContent = "Predict";
-    submitButton.type = "submit";
-    form.appendChild(submitButton);
-
-    form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        const newItem = {};
-        fields.forEach((field) => {
-            const input = document.getElementById(field.id);
-            newItem[field.id] = input.value;
+    try {
+        // Send POST request to the /predict endpoint with the form data
+        const response = await fetch("/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(predictData)  // Send data as JSON
         });
 
-        try {
-            const response = await fetch("/predict", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newItem),
-            });
+        const predictionsContainer = document.getElementById("predictions");
+        predictionsContainer.innerHTML = "";  // Clear any existing predictions
 
+        if (response.ok) {
             const result = await response.json();
-            if (result.error) {
-                alert(`Error: ${result.error}`);
-            } else {
-                alert(`Predicted Category: ${result.predicted_category}`);
-            }
-        } catch (error) {
-            alert("Error predicting the category.");
-        }
-    });
 
-    app.appendChild(form);
+            if (result.predicted_categories && result.predicted_categories.length > 0) {
+                result.predicted_categories.forEach((imageName) => {
+                    const predictionDiv = document.createElement("div");
+
+                    const img = document.createElement("img");
+                    img.src = `/get_image/${imageName}`;
+                    img.alt = imageName;
+
+                    const label = document.createElement("p");
+                    label.textContent = imageName;
+
+                    predictionDiv.appendChild(img);
+                    predictionDiv.appendChild(label);
+                    predictionsContainer.appendChild(predictionDiv);
+                });
+            } else {
+                predictionsContainer.innerHTML = "<p>No predictions found.</p>";
+            }
+        } else {
+            const error = await response.json();
+            alert(error.error || "An error occurred while predicting.");
+        }
+    } catch (error) {
+        console.error("Error during prediction request:", error);
+        alert("Failed to predict. Please try again.");
+    }
 });
