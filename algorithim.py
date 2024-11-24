@@ -109,7 +109,7 @@ def main():
         "top_bot": ["bottom"],
         "color": ["green"],
         "length": ["long"],
-        "style": ["cargo"]
+        "style": ["slacks"]
     })
 
     # Predict the new item's category
