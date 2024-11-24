@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pants Predictor</title>
+    <title>Clothing Recommender</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,10 +25,10 @@
     </style>
 </head>
 <body>
-    <h1>Pants Predictor</h1>
+    <h1>Clothing Recommender</h1>
     <button id="trainButton">Train Model</button>
     <form id="predictForm">
-        <h2>Predict Pants</h2>
+        <h2>Get Recommendation</h2>
         <label>
             Top/Bottom:
             <input type="text" id="top_bot" name="top_bot" value="bottom" required>
@@ -57,7 +57,7 @@
         <button type="submit">Predict</button>
     </form>
     <div id="predictions">
-        <h2>Predicted Pants:</h2>
+        <h2>Recommended:</h2>
     </div>
 
     <!-- Reference the app.js script from the static folder -->
