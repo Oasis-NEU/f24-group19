@@ -1,122 +1,97 @@
-import os
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 
+app = Flask(__name__)
+
+# Global variables for model and encoders
+knn = None
+label_encoders = {}
+scaler = None
+
 # Creates an empty DataFrame for pants
 def empty_pants():
     parameters = ["clothing", "top_bot", "color", "length", "style"]
-    df = pd.DataFrame(columns=parameters)
-    return df
+    return pd.DataFrame(columns=parameters)
 
-# Gets all file directories in a specified directory
-def directory_file(directory):
-    files = os.listdir(directory)
-    img_files = [os.path.join(directory, filename) for filename in files]
-    return img_files
-
-# Tags clothing images with specified parameters
-def tagging(clothing, top_bot, color, length, style):
-    return {
-        'clothing': clothing,
-        'top_bot': top_bot,
-        'color': color,
-        'length': length,
-        'style': style
-    }
-
-# Adds tagged data to the DataFrame
-def add_data(formatted, df):
-    df = df._append(formatted, ignore_index=True)
-    return df
-
-# Manually tags pants images
+# Tags pants data
 def pants_tagging():
-    pants_directory = 'clothing v.2/pants'
-    pants = directory_file(pants_directory)
-
-    # Manual tagging for each file
     formats = [
-        tagging("pants 1", "bottom", "black", "shorts", "sweats"),
-        tagging("pants 2", "bottom", "green", "long", "cargo"),
-        tagging("pants 3", "bottom", "black", "long", "sweats"),
-        tagging("pants 4", "bottom", "white", "long", "sweats"),
-        tagging("pants 5", "bottom", "navy", "long", "jeans"),
-        tagging("pants 6", "bottom", "light blue", "long", "jeans"),
-        tagging("pants 7", "bottom", "black", "long", "jeans"),
-        tagging("pants 8", "bottom", "blue", "long", "slacks"),
-        tagging("pants 9", "bottom", "beige", "long", "slacks"),
-        tagging("pants 10", "bottom", "gray", "long", "slacks")
+        {"clothing": "pants 1", "top_bot": "bottom", "color": "black", "length": "shorts", "style": "sweats"},
+        {"clothing": "pants 2", "top_bot": "bottom", "color": "green", "length": "long", "style": "cargo"},
+        {"clothing": "pants 3", "top_bot": "bottom", "color": "black", "length": "long", "style": "sweats"},
+        {"clothing": "pants 4", "top_bot": "bottom", "color": "white", "length": "long", "style": "sweats"},
+        {"clothing": "pants 5", "top_bot": "bottom", "color": "navy", "length": "long", "style": "jeans"},
+        {"clothing": "pants 6", "top_bot": "bottom", "color": "light blue", "length": "long", "style": "jeans"},
+        {"clothing": "pants 7", "top_bot": "bottom", "color": "black", "length": "long", "style": "jeans"},
+        {"clothing": "pants 8", "top_bot": "bottom", "color": "blue", "length": "long", "style": "slacks"},
+        {"clothing": "pants 9", "top_bot": "bottom", "color": "beige", "length": "long", "style": "slacks"},
+        {"clothing": "pants 10", "top_bot": "bottom", "color": "gray", "length": "long", "style": "slacks"}
     ]
-    return formats
+    return pd.DataFrame(formats)
 
-# Encodes categorical columns
+# Encodes categorical data
 def encoding(df):
+    global label_encoders
     label_encoders = {}
     for column in ["clothing", "top_bot", "color", "length", "style"]:
         le = LabelEncoder()
         df[column] = le.fit_transform(df[column])
         label_encoders[column] = le
-    return df, label_encoders
+    return df
 
-# Splits and scales the dataset
+# Splits and scales data
 def train_test(df):
     X = df.drop('clothing', axis=1)
     y = df['clothing']
-
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    global scaler
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
+    return X_train, X_test, y_train, y_test
 
-    return X_train, X_test, y_train, y_test, scaler
-
-# Trains the k-NN classifier
-def clothing_algo(df, n_neighbors=3):
-    X_train, X_test, y_train, y_test, _ = train_test(df)
-    knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+# Trains the k-NN model
+def train_model(df):
+    X_train, _, y_train, _ = train_test(df)
+    global knn
+    knn = KNeighborsClassifier(n_neighbors=3)
     knn.fit(X_train, y_train)
-    return knn
 
-# Predicts the category of a new clothing item
-def predict_new_item(knn, new_item, label_encoders, scaler, clothing_encoder):
+# Predicts new item
+def predict_new_item(new_item):
     for column in ["top_bot", "color", "length", "style"]:
         new_item[column] = label_encoders[column].transform(new_item[column])
-    new_item_scaled = scaler.transform(new_item.drop('clothing', axis=1))
+    new_item_scaled = scaler.transform(new_item)
     predicted_clothing = knn.predict(new_item_scaled)
-    return clothing_encoder.inverse_transform(predicted_clothing)
+    return label_encoders["clothing"].inverse_transform(predicted_clothing)
 
-# Main function
-def main():
-    # Initialize an empty DataFrame
-    df = empty_pants()
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-    # Add tagged data
-    formats = pants_tagging()
-    for format_ in formats:
-        df = add_data(format_, df)
+@app.route('/train', methods=['POST'])
+def train():
+    # Create and encode dataset
+    df = pants_tagging()
+    df = encoding(df)
+    train_model(df)
+    return jsonify({"message": "Model trained successfully!"})
 
-    # Encode data
-    df, label_encoders = encoding(df)
+@app.route('/predict', methods=['POST'])
+def predict():
+    if knn is None:
+        return jsonify({"error": "Model not trained yet. Call /train first."}), 400
 
-    # Train the k-NN model
-    knn = clothing_algo(df)
+    # Get user input from the form
+    data = request.json
+    new_item = pd.DataFrame([data])
 
-    # Create a new item to predict
-    new_item = pd.DataFrame({
-        "clothing": ["new pants"],
-        "top_bot": ["bottom"],
-        "color": ["green"],
-        "length": ["long"],
-        "style": ["slacks"]
-    })
+    # Predict category
+    predicted_item = predict_new_item(new_item)
+    return jsonify({"predicted_category": predicted_item[0]})
 
-    # Predict the new item's category
-    _, _, _, _, scaler = train_test(df)
-    predicted_item = predict_new_item(knn, new_item, label_encoders, scaler, label_encoders["clothing"])
-
-    print(f"Predicted clothing category: {predicted_item[0]}")
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app.run(debug=True)
