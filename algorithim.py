@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify, send_file
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+import os
 
 app = Flask(__name__)
 
@@ -19,16 +20,16 @@ def empty_pants():
 # Tags pants data
 def pants_tagging():
     formats = [
-        {"clothing": "pants 1", "top_bot": "bottom", "color": "black", "length": "shorts", "style": "sweats"},
-        {"clothing": "pants 2", "top_bot": "bottom", "color": "green", "length": "long", "style": "cargo"},
-        {"clothing": "pants 3", "top_bot": "bottom", "color": "black", "length": "long", "style": "sweats"},
-        {"clothing": "pants 4", "top_bot": "bottom", "color": "white", "length": "long", "style": "sweats"},
-        {"clothing": "pants 5", "top_bot": "bottom", "color": "navy", "length": "long", "style": "jeans"},
-        {"clothing": "pants 6", "top_bot": "bottom", "color": "light blue", "length": "long", "style": "jeans"},
-        {"clothing": "pants 7", "top_bot": "bottom", "color": "black", "length": "long", "style": "jeans"},
-        {"clothing": "pants 8", "top_bot": "bottom", "color": "blue", "length": "long", "style": "slacks"},
-        {"clothing": "pants 9", "top_bot": "bottom", "color": "beige", "length": "long", "style": "slacks"},
-        {"clothing": "pants 10", "top_bot": "bottom", "color": "gray", "length": "long", "style": "slacks"}
+        {"clothing": "pants 1.jpg", "top_bot": "bottom", "color": "black", "length": "shorts", "style": "sweats"},
+        {"clothing": "pants 2.jpg", "top_bot": "bottom", "color": "green", "length": "long", "style": "cargo"},
+        {"clothing": "pants 3.jpg", "top_bot": "bottom", "color": "black", "length": "long", "style": "sweats"},
+        {"clothing": "pants 4.jpg", "top_bot": "bottom", "color": "white", "length": "long", "style": "sweats"},
+        {"clothing": "pants 5.jpg", "top_bot": "bottom", "color": "navy", "length": "long", "style": "jeans"},
+        {"clothing": "pants 6.jpg", "top_bot": "bottom", "color": "light blue", "length": "long", "style": "jeans"},
+        {"clothing": "pants 7.jpg", "top_bot": "bottom", "color": "black", "length": "long", "style": "jeans"},
+        {"clothing": "pants 8.jpg", "top_bot": "bottom", "color": "blue", "length": "long", "style": "slacks"},
+        {"clothing": "pants 9.jpg", "top_bot": "bottom", "color": "beige", "length": "long", "style": "slacks"},
+        {"clothing": "pants 10.jpg", "top_bot": "bottom", "color": "gray", "length": "long", "style": "slacks"}
     ]
     return pd.DataFrame(formats)
 
@@ -92,6 +93,14 @@ def predict():
     # Predict category
     predicted_item = predict_new_item(new_item)
     return jsonify({"predicted_category": predicted_item[0]})
+
+@app.route('/get_image/<image_name>')
+def get_image(image_name):
+    image_path = os.path.join('static', 'images', image_name)
+    if os.path.exists(image_path):
+        return send_file(image_path, mimetype='image/jpeg')
+    else:
+        return jsonify({"error": "Image not found!"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
